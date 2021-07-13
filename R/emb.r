@@ -843,6 +843,16 @@ amelia.default <- function(x, m = 5, p2s = 1, frontend = FALSE, idvars = NULL,
 
     ximp <- amelia.impute(prepped$x, thetanew$thetanew, priors = prepped$priors,
                           bounds = prepped$bounds, max.resample)
+    if (is.null(ximp)) {
+      impdata$imputations[[1]] <- NA
+      impdata$code <- 2
+      impdata$arguments <- prepped$archv
+      class(impdata$arguments) <- c("ameliaArgs", "list")
+
+      cat("\n\nThe resulting variance matrix was not invertible.",
+          "  Please check your data for highly collinear variables.\n\n")
+      return(impdata)
+    }
     ximp <- amunstack(ximp, n.order = prepped$n.order,
                       p.order = prepped$p.order)
     ximp <- unscale(ximp, mu = prepped$scaled.mu, sd = prepped$scaled.sd)

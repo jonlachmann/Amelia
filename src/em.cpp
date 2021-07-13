@@ -397,7 +397,11 @@ SEXP ameliaImpute(SEXP xs, SEXP AMr1s, SEXP os, SEXP ms, SEXP ivec, SEXP thetas,
 
       mispos = arma::find(mismat.row(ss));
       Ci.zeros(k, k);
-      Ci(mispos, mispos) = chol(theta(mispos+1, mispos + 1));
+      try {
+        Ci(mispos, mispos) = chol(theta(mispos+1, mispos + 1));
+      } catch (const std::runtime_error& e) {
+        return R_NilValue;
+      }
       junk = Rcpp::rnorm((isp - is + 1)* k, 0, 1);
       junk.reshape(isp - is +1, k);
       junk = junk * Ci;
@@ -455,8 +459,17 @@ SEXP ameliaImpute(SEXP xs, SEXP AMr1s, SEXP os, SEXP ms, SEXP ivec, SEXP thetas,
           arma::mat muMiss = wvar * (prHolder.elem(mispos) + solveSigma * arma::trans(imputations(pu, mispos)));
           imputations(pu, mispos) = arma::trans(muMiss);
           Ci(mispos, mispos) = chol(wvar);
+          try {
+            Ci(mispos, mispos) = chol(wvar);
+          } catch (const std::runtime_error& e) {
+            return R_NilValue;
+          }
         } else {
-          Ci(mispos, mispos) = chol(theta(mispos + 1, mispos + 1));
+          try {
+            Ci(mispos, mispos) = chol(theta(mispos + 1, mispos + 1));
+          } catch (const std::runtime_error& e) {
+            return R_NilValue;
+          }
         }
         junk.row(p) = junk.row(p) * Ci;
         if (Rf_isNull(bdss)) {
